@@ -1,0 +1,27 @@
+В этом архиве — полный исходный код мода Prism Visuals.
+
+=== САМЫЙ ПРОСТОЙ СПОСОБ — В БРАУЗЕРЕ, НИЧЕГО НЕ УСТАНАВЛИВАЯ ===
+
+1. Зайди на https://github.com  (бесплатный аккаунт).
+2. Создай новый репозиторий:  https://github.com/new
+   (имя любое, например prism-visuals).
+3. На странице репозитория нажми 'uploading an existing file'
+   и перетащи ВСЕ файлы и папки из этого архива, включая
+   скрытую папку .github  (на Mac видна по Cmd+Shift+точка).
+   Внизу страницы нажми 'Commit changes'.
+4. Вкладка Actions  ->  если спросит, разреши workflows ->
+   слева 'Build Prism Visuals'  ->  кнопка 'Run workflow'.
+5. Подожди 3-6 минут, обнови страницу, открой завершившуюся
+   сборку и внизу в блоке Artifacts скачай prism-visuals-jar.zip
+   внутри него готовый prism-visuals-1.0.0.jar.
+
+GitHub сам скачает Java, Gradle и Minecraft — на твоём
+компьютере не нужно ставить НИЧЕГО.
+
+=== СПОСОБ НА СВОЁМ КОМПЬЮТЕРЕ (кто хочет собирать сам) ===
+
+Понадобится JDK 21: https://adoptium.net/temurin/releases/?version=21
+Потом в папке проекта:
+  gradle wrapper --gradle-version 8.10
+  gradlew build
+Готовый JAR появится в папке build/libs/

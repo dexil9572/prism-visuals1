@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "prism",
+  "version": "${version}",
+  "name": "Prism Visuals",
+  "description": "Клиентский визуальный мод: цветные частицы удара, фуллбрайт, плавный зум, кейстроки, кастомный прицел, подсветка блоков, HUD и многое другое. Right Shift — меню.",
+  "authors": [
+    "You"
+  ],
+  "contact": {
+    "sources": "https://example.com"
+  },
+  "license": "MIT",
+  "icon": "assets/prism/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "ru.prism.vis.PrismClient"
+    ]
+  },
+  "mixins": [
+    "prism.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
