@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'java'
 }
 
@@ -12,10 +12,7 @@ repositories {
 
 loom {
     runs {
-        client {
-            client()
-            setRunDirectory("run")
-        }
+        // тут какие-то настройки client, server и т.д.
     }
 }
 
@@ -35,11 +32,20 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
-    it.options.release = 21
+    it.options.release = 25
 }
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
