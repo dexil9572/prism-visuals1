@@ -1,17 +1,24 @@
 package ru.prism.vis;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.phys.EntityHitResult;
 import org.lwjgl.glfw.GLFW;
 import ru.prism.vis.config.PrismConfig;
 import ru.prism.vis.module.ModuleManager;
+import ru.prism.vis.module.modules.HitParticlesModule;
 import ru.prism.vis.module.modules.ToggleSprintModule;
-import ru.prism.vis.render.OverlayRenderer;
+import ru.prism.vis.render.BlockOverlayRenderer;
+import ru.prism.vis.render.HudRenderer;
 import ru.prism.vis.ui.PrismScreen;
 
 import java.util.ArrayDeque;
@@ -19,69 +26,100 @@ import java.util.Deque;
 
 /**
  * Точка входа мода. Здесь регистрируются клавиши, модули,
- * рендер- события и загрузка/сохранение конфига.
+ * HUD-элементы, рендер-события и загрузка/сохранение конфига.
  */
 public class PrismClient implements ClientModInitializer {
     public static final String MOD_ID = "prism";
     public static final String VERSION = "1.0.0";
 
-    private static KeyBinding zoomKey;
-    private static KeyBinding sprintKey;
-    private static KeyBinding guiKey;
+    private static KeyMapping zoomKey;
+    private static KeyMapping sprintKey;
+    private static KeyMapping guiKey;
 
     // Очереди кликов для подсчёта CPS
-    private static final Deque<Long> attackClicks = new ArrayDeque<>();
-    private static final Deque<Long> useClicks = new ArrayDeque<>();
+    private static final Deque<Long> ATTACK_CLICKS = new ArrayDeque<>();
+    private static final Deque<Long> USE_CLICKS = new ArrayDeque<>();
 
     @Override
     public void onInitializeClient() {
         PrismConfig.load();
         ModuleManager.init();
 
-        zoomKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.prism.zoom", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.prism"));
-        sprintKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.prism.sprint", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.prism"));
-        guiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.prism.gui", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, "key.categories.prism"));
+        KeyMapping.Category category =
+                KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "main"));
+
+        zoomKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.prism.zoom", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, category));
+        sprintKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.prism.sprint", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, category));
+        guiKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.prism.gui", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, category));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ModuleManager.tick(client);
-            while (sprintKey.wasPressed()) {
+            while (sprintKey.consumeClick()) {
                 ToggleSprintModule.onKey(client);
             }
-            while (guiKey.wasPressed()) {
-                if (client.currentScreen == null) {
-                    client.setScreen(new PrismScreen());
+            while (guiKey.consumeClick()) {
+                if (client.gui.screen() == null) {
+                    client.gui.setScreen(new PrismScreen());
                 }
             }
         });
 
+        // Удары по сущностям: частицы + CPS
+        ClientPreAttackCallback.EVENT.register((client, player, clickCount) -> {
+            if (clickCount != 0) {
+                recordAttack();
+                if (ModuleManager.HIT_PARTICLES.isEnabled() && client.hitResult instanceof EntityHitResult hit) {
+                    HitParticlesModule.spawn(client, hit.getEntity());
+                }
+            }
+            return false;
+        });
+
+        // HUD мода — после всех ванильных элементов
+        HudElementRegistry.attachElementAfter(VanillaHudElements.SUBTITLES, id("hud"), HudRenderer::extract);
+
+        // Свой прицел вместо ванильного
+        HudElementRegistry.replaceElement(VanillaHudElements.CROSSHAIR, original -> (graphics, deltaTracker) -> {
+            if (ModuleManager.CROSSHAIR.isEnabled()) {
+                HudRenderer.extractCrosshair(graphics);
+            } else {
+                original.extractRenderState(graphics, deltaTracker);
+            }
+        });
+
         // Подсветка блока рисуется в мире
-        WorldRenderEvents.LAST.register(OverlayRenderer::renderLast);
+        LevelRenderEvents.BEFORE_BLOCK_OUTLINE.register(BlockOverlayRenderer::render);
+
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> PrismConfig.save());
     }
 
-    public static KeyBinding zoomKey() {
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
+    }
+
+    public static KeyMapping zoomKey() {
         return zoomKey;
     }
 
-    // ============ CPS-счётчики (вызываются из миксина) ============
+    // ============ CPS-счётчики (вызываются из миксинов/событий) ============
 
     public static void recordAttack() {
-        push(attackClicks);
+        push(ATTACK_CLICKS);
     }
 
     public static void recordUse() {
-        push(useClicks);
+        push(USE_CLICKS);
     }
 
     public static int attackCps() {
-        return prune(attackClicks);
+        return prune(ATTACK_CLICKS);
     }
 
     public static int useCps() {
-        return prune(useClicks);
+        return prune(USE_CLICKS);
     }
 
     private static void push(Deque<Long> queue) {

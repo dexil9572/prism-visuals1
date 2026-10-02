@@ -1,51 +1,44 @@
 package ru.prism.vis.module.modules;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.SimpleOption;
-import ru.prism.vis.mixin.DoubleSliderCallbacksAccessor;
-import ru.prism.vis.mixin.SimpleOptionAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
+import ru.prism.vis.mixin.OptionInstanceValueAccessor;
 import ru.prism.vis.module.Category;
 import ru.prism.vis.module.Module;
 
 /**
- * Full Bright: расширяем лимит ползунка яркости через accessor-миксины
- * и выкручиваем гамму до x1500.
+ * Full Bright: выкручиваем гамму далеко за пределы ползунка
+ * (значение пишется прямо в OptionInstance, минуя валидацию 0..1).
  */
 public class FullBrightModule extends Module {
+    /** Значение гаммы, при котором ночь становится как день. */
+    private static final double BRIGHT = 10.0;
+
     private boolean applied;
+    private double previous = 0.5;
 
     public FullBrightModule() {
         super("full_bright", "Full Bright", "Максимальная яркость — ночь как день", Category.RENDER);
     }
 
     @Override
-    public void onTick(MinecraftClient client) {
+    public void onTick(Minecraft client) {
         if (client.options == null) {
             return;
         }
-        if (isEnabled() && !applied) {
-            apply(client, true);
-            applied = true;
-        } else if (!isEnabled() && applied) {
-            apply(client, false);
-            applied = false;
-        } else if (isEnabled() && client.options.getGamma().getValue() < 500.0) {
-            // игрок мог сбросить яркость в настройках видео — возвращаем
-            client.options.getGamma().setValue(1500.0);
-        }
-    }
+        OptionInstance<Double> gamma = client.options.gamma();
 
-    private void apply(MinecraftClient client, boolean on) {
-        try {
-            SimpleOption<Double> gamma = client.options.getGamma();
-            Object callbacks = ((SimpleOptionAccessor) (Object) gamma).prism$callbacks();
-            if (callbacks instanceof SimpleOption.DoubleSliderCallbacks) {
-                DoubleSliderCallbacksAccessor accessor = (DoubleSliderCallbacksAccessor) callbacks;
-                accessor.prism$setMax(on ? 1500.0 : 1.0);
+        if (isEnabled()) {
+            if (!applied) {
+                previous = gamma.get();
+                applied = true;
             }
-            gamma.setValue(on ? 1500.0 : 1.0);
-        } catch (Throwable t) {
-            t.printStackTrace();
+            if (gamma.get() < BRIGHT) {
+                ((OptionInstanceValueAccessor) (Object) gamma).prism$setValue(BRIGHT);
+            }
+        } else if (applied) {
+            ((OptionInstanceValueAccessor) (Object) gamma).prism$setValue(previous);
+            applied = false;
         }
     }
 }

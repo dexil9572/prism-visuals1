@@ -1,8 +1,10 @@
 package ru.prism.vis.ui;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 import ru.prism.vis.PrismClient;
 import ru.prism.vis.config.PrismConfig;
@@ -23,7 +25,7 @@ public class PrismScreen extends Screen {
     private final List<Zone> zones = new ArrayList<>();
 
     public PrismScreen() {
-        super(Text.literal("Prism Visuals"));
+        super(Component.literal("Prism Visuals"));
     }
 
     private record Zone(int x, int y, int w, int h, int moduleIndex, Runnable action) {
@@ -33,15 +35,16 @@ public class PrismScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         this.zones.clear();
+        Font font = this.font;
 
         // фон: тёмный градиент поверх игры
-        ctx.fillGradient(0, 0, this.width, this.height, 0xE6040612, 0xF20B0317);
+        graphics.fillGradient(0, 0, this.width, this.height, 0xE6040612, 0xF20B0317);
 
         int centerX = this.width / 2;
-        drawCentered(ctx, "PRISM VISUALS", centerX, 12, Colors.rainbow());
-        drawCentered(ctx, "клиентский визуальный мод · v" + PrismClient.VERSION, centerX, 26, 0xFF94A3B8);
+        graphics.centeredText(font, "PRISM VISUALS", centerX, 12, Colors.rainbow());
+        graphics.centeredText(font, "клиентский визуальный мод · v" + PrismClient.VERSION, centerX, 26, 0xFF94A3B8);
 
         List<Module> mods = ModuleManager.modules();
         if (selected >= mods.size()) {
@@ -60,82 +63,81 @@ public class PrismScreen extends Screen {
         for (int i = 0; i < mods.size(); i++) {
             int col = i % cols;
             int row = i / cols;
-            drawCard(ctx, mods.get(i), startX + col * (cardW + gap), startY + row * (cardH + gap), cardW, cardH, i);
+            drawCard(graphics, mods.get(i), startX + col * (cardW + gap), startY + row * (cardH + gap), cardW, cardH, i);
         }
 
         // панель настроек выбранного модуля
         int rows = (mods.size() + cols - 1) / cols;
         int panelY = startY + rows * (cardH + gap) + 4;
-        drawSettings(ctx, mods.get(selected), startX, panelY, gridW);
+        drawSettings(graphics, mods.get(selected), startX, panelY, gridW);
 
         // нижняя панель
-        int btnW = button(ctx, "Открыть конфиг (config/prism.json)", startX, this.height - 24, () -> {
+        int btnW = button(graphics, "Открыть конфиг (config/prism.json)", startX, this.height - 24, () -> {
             try {
-                Util.getOperatingSystem().open(PrismConfig.file().getParent().toFile());
+                Util.getPlatform().openFile(PrismConfig.file().getParent().toFile());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-        ctx.drawTextWithShadow(this.textRenderer,
-                "ЛКМ — вкл/выкл · ПКМ — выбрать · Esc — закрыть",
-                startX + btnW + 16, this.height - 23, 0xFF64748B);
+        graphics.text(font, "ЛКМ — вкл/выкл · ПКМ — выбрать · Esc — закрыть",
+                startX + btnW + 16, this.height - 23, 0xFF64748B, true);
 
-        super.render(ctx, mouseX, mouseY, delta);
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
 
-    private void drawCard(DrawContext ctx, Module m, int x, int y, int w, int h, int index) {
+    private void drawCard(GuiGraphicsExtractor graphics, Module m, int x, int y, int w, int h, int index) {
+        Font font = this.font;
         boolean on = m.isEnabled();
         boolean isSelected = index == selected;
 
-        ctx.fill(x, y, x + w, y + h, on ? 0x9918102E : 0x990A0D18);
-        border(ctx, x, y, w, h, isSelected ? Colors.rainbow() : (on ? 0xFFA78BFA : 0x33FFFFFF));
+        graphics.fill(x, y, x + w, y + h, on ? 0x9918102E : 0x990A0D18);
+        border(graphics, x, y, w, h, isSelected ? Colors.rainbow() : (on ? 0xFFA78BFA : 0x33FFFFFF));
         // цветная полоса категории
-        ctx.fill(x, y, x + 2, y + h, 0xFF000000 | m.category.color);
+        graphics.fill(x, y, x + 2, y + h, 0xFF000000 | m.category.color);
 
-        ctx.drawTextWithShadow(this.textRenderer, m.name, x + 8, y + 7, on ? 0xFFFFFFFF : 0xFF94A3B8);
-        String desc = this.textRenderer.trimToWidth(m.description, w - 16);
-        ctx.drawTextWithShadow(this.textRenderer, desc, x + 8, y + 21, 0xFFA5B4C8);
+        graphics.text(font, m.name, x + 8, y + 7, on ? 0xFFFFFFFF : 0xFF94A3B8, true);
+        String desc = font.plainSubstrByWidth(m.description, w - 16);
+        graphics.text(font, desc, x + 8, y + 21, 0xFFA5B4C8, true);
 
         // тумблер
         int tw = 26;
         int th = 12;
         int tx = x + w - tw - 8;
         int ty = y + h - th - 8;
-        ctx.fill(tx, ty, tx + tw, ty + th, on ? 0xFF7C3AED : 0xFF1E293B);
+        graphics.fill(tx, ty, tx + tw, ty + th, on ? 0xFF7C3AED : 0xFF1E293B);
         int knobX = on ? tx + tw - 9 : tx + 2;
-        ctx.fill(knobX, ty + 2, knobX + 7, ty + th - 2, 0xFFFFFFFF);
+        graphics.fill(knobX, ty + 2, knobX + 7, ty + th - 2, 0xFFFFFFFF);
 
         String state = on ? "ON" : "OFF";
-        ctx.drawTextWithShadow(this.textRenderer, state, x + 8, y + h - 15,
-                on ? 0xFFA78BFA : 0xFF475569);
-        ctx.drawTextWithShadow(this.textRenderer, m.category.label, x + 30, y + h - 15,
-                0xFF000000 | m.category.color);
+        graphics.text(font, state, x + 8, y + h - 15, on ? 0xFFA78BFA : 0xFF475569, true);
+        graphics.text(font, m.category.label, x + 30, y + h - 15, 0xFF000000 | m.category.color, true);
 
         zones.add(new Zone(x, y, w, h, index, m::toggle));
     }
 
-    private void drawSettings(DrawContext ctx, Module m, int x, int y, int w) {
+    private void drawSettings(GuiGraphicsExtractor graphics, Module m, int x, int y, int w) {
+        Font font = this.font;
         int h = 56;
-        ctx.fill(x, y, x + w, y + h, 0x99101824);
-        border(ctx, x, y, w, h, 0x33FFFFFF);
-        ctx.drawTextWithShadow(this.textRenderer, "Настройки: " + m.name, x + 8, y + 6, 0xFFE2E8F0);
+        graphics.fill(x, y, x + w, y + h, 0x99101824);
+        border(graphics, x, y, w, h, 0x33FFFFFF);
+        graphics.text(font, "Настройки: " + m.name, x + 8, y + 6, 0xFFE2E8F0, true);
 
         if (m.settings.isEmpty()) {
-            ctx.drawTextWithShadow(this.textRenderer,
-                    "У этого модуля нет настроек — просто включи его.", x + 8, y + 24, 0xFF64748B);
+            graphics.text(font, "У этого модуля нет настроек — просто включи его.",
+                    x + 8, y + 24, 0xFF64748B, true);
             return;
         }
 
         int sx = x + 8;
         for (Setting s : m.settings) {
             String value = s.display();
-            ctx.drawTextWithShadow(this.textRenderer, s.label, sx, y + 20, 0xFFA5B4C8);
+            graphics.text(font, s.label, sx, y + 20, 0xFFA5B4C8, true);
             int buttonY = y + 33;
-            int minusW = button(ctx, "[-]", sx, buttonY, () -> s.click(true));
-            int valueW = this.textRenderer.getWidth(value);
-            ctx.drawTextWithShadow(this.textRenderer, value, sx + minusW + 6, buttonY + 1, 0xFFFFFFFF);
+            int minusW = button(graphics, "[-]", sx, buttonY, () -> s.click(true));
+            int valueW = font.width(value);
+            graphics.text(font, value, sx + minusW + 6, buttonY + 1, 0xFFFFFFFF, true);
             int plusX = sx + minusW + 6 + valueW + 6;
-            int plusW = button(ctx, "[+]", plusX, buttonY, () -> s.click(false));
+            int plusW = button(graphics, "[+]", plusX, buttonY, () -> s.click(false));
             sx += (plusX - sx) + plusW + 22;
             if (sx > x + w - 70) {
                 break; // не влезает — модулю хватит и видимых
@@ -144,51 +146,47 @@ public class PrismScreen extends Screen {
     }
 
     /** Рисует кнопку и возвращает её ширину. */
-    private int button(DrawContext ctx, String label, int x, int y, Runnable action) {
-        int w = this.textRenderer.getWidth(label) + 10;
-        ctx.fill(x, y, x + w, y + 11, 0xFF1E293B);
-        border(ctx, x, y, w, 11, 0x44FFFFFF);
-        ctx.drawTextWithShadow(this.textRenderer, label, x + 5, y + 2, 0xFFE2E8F0);
+    private int button(GuiGraphicsExtractor graphics, String label, int x, int y, Runnable action) {
+        int w = this.font.width(label) + 10;
+        graphics.fill(x, y, x + w, y + 11, 0xFF1E293B);
+        border(graphics, x, y, w, 11, 0x44FFFFFF);
+        graphics.text(this.font, label, x + 5, y + 2, 0xFFE2E8F0, true);
         zones.add(new Zone(x, y, w, 11, selected, action));
         return w;
     }
 
-    private void border(DrawContext ctx, int x, int y, int w, int h, int color) {
-        ctx.fill(x, y, x + w, y + 1, color);
-        ctx.fill(x, y + h - 1, x + w, y + h, color);
-        ctx.fill(x, y, x + 1, y + h, color);
-        ctx.fill(x + w - 1, y, x + w, y + h, color);
-    }
-
-    private void drawCentered(DrawContext ctx, String text, int centerX, int y, int color) {
-        ctx.drawCenteredTextWithShadow(this.textRenderer, text, centerX, y, color);
+    private void border(GuiGraphicsExtractor graphics, int x, int y, int w, int h, int color) {
+        graphics.fill(x, y, x + w, y + 1, color);
+        graphics.fill(x, y + h - 1, x + w, y + h, color);
+        graphics.fill(x, y, x + 1, y + h, color);
+        graphics.fill(x + w - 1, y, x + w, y + h, color);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int mx = (int) mouseX;
-        int my = (int) mouseY;
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        int mx = (int) event.x();
+        int my = (int) event.y();
         for (Zone zone : new ArrayList<>(zones)) {
             if (zone.contains(mx, my)) {
-                if (button == 0) {
+                if (event.button() == 0) {
                     zone.action().run();
-                } else if (button == 1) {
+                } else if (event.button() == 1) {
                     selected = zone.moduleIndex();
                 }
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         PrismConfig.save();
-        super.close();
+        super.onClose();
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 }
