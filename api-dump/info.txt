@@ -7,5 +7,5 @@ MCJAR=/home/runner/.gradle/caches/fabric-loom/26.2/minecraft-merged.jar
  10952 api-dump/classes.txt
    198 api-dump/fabric.txt
      8 api-dump/info.txt
-  3369 api-dump/javap.txt
- 14527 total
+  4404 api-dump/javap.txt
+ 15562 total
