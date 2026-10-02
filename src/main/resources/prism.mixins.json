@@ -8,7 +8,9 @@
     "ScreenEffectRendererMixin",
     "LevelClockMixin",
     "ClientClockManagerMixin",
-    "OptionInstanceValueAccessor"
+    "OptionInstanceValueAccessor",
+    "FogRendererAccessor",
+    "ItemInHandRendererMixin"
   ],
   "mixins": [],
   "injectors": {

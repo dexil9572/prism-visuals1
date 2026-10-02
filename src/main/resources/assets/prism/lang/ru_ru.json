@@ -3,5 +3,6 @@
   "key.categories.prism": "Prism Visuals",
   "key.prism.zoom": "Зум (зажать)",
   "key.prism.sprint": "Автоспринт",
-  "key.prism.gui": "Меню Prism"
+  "key.prism.gui": "Меню Prism",
+  "key.prism.copypos": "Копировать координаты (V)"
 }

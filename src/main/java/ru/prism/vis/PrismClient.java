@@ -15,6 +15,7 @@ import net.minecraft.world.phys.EntityHitResult;
 import org.lwjgl.glfw.GLFW;
 import ru.prism.vis.config.PrismConfig;
 import ru.prism.vis.module.ModuleManager;
+import ru.prism.vis.module.modules.CopyCoordsModule;
 import ru.prism.vis.module.modules.HitParticlesModule;
 import ru.prism.vis.module.modules.ToggleSprintModule;
 import ru.prism.vis.render.BlockOverlayRenderer;
@@ -30,11 +31,12 @@ import java.util.Deque;
  */
 public class PrismClient implements ClientModInitializer {
     public static final String MOD_ID = "prism";
-    public static final String VERSION = "1.0.1";
+    public static final String VERSION = "1.1.0";
 
     private static KeyMapping zoomKey;
     private static KeyMapping sprintKey;
     private static KeyMapping guiKey;
+    private static KeyMapping copyKey;
 
     // Очереди кликов для подсчёта CPS
     private static final Deque<Long> ATTACK_CLICKS = new ArrayDeque<>();
@@ -54,6 +56,8 @@ public class PrismClient implements ClientModInitializer {
                 "key.prism.sprint", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, category));
         guiKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.prism.gui", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, category));
+        copyKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.prism.copypos", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, category));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ModuleManager.tick(client);
@@ -63,6 +67,11 @@ public class PrismClient implements ClientModInitializer {
             while (guiKey.consumeClick()) {
                 if (client.gui.screen() == null) {
                     client.gui.setScreen(new PrismScreen());
+                }
+            }
+            while (copyKey.consumeClick()) {
+                if (client.gui.screen() == null && ModuleManager.COPY_POS.isEnabled()) {
+                    CopyCoordsModule.copy(client);
                 }
             }
         });

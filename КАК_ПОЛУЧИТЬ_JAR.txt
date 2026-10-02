@@ -3,7 +3,7 @@
 === САМЫЙ ПРОСТОЙ СПОСОБ — ГОТОВЫЙ JAR ===
 
 1. Открой страницу репозитория на GitHub.
-2. Справа выбери вкладку "Releases" и скачай prism-visuals-1.0.1.jar
+2. Справа выбери вкладку "Releases" и скачай prism-visuals-1.1.0.jar
    из последнего релиза "Prism Visuals 1.0.1 — Minecraft 26.2 (Fabric)".
    (Если релиза ещё нет — вкладка Actions -> последняя удачная сборка
    "Build Prism Visuals" -> внизу блок Artifacts -> prism-visuals-jar.)
@@ -15,7 +15,7 @@
 - Fabric API для 26.2 (https://modrinth.com/mod/fabric-api) — тоже в папку mods
 - Java 25 (нужна самой игре 26.x)
 
-Скачанный prism-visuals-1.0.1.jar положи в папку .minecraft/mods рядом с Fabric API.
+Скачанный prism-visuals-1.1.0.jar положи в папку .minecraft/mods рядом с Fabric API.
 
 === СПОСОБ НА СВОЁМ КОМПЬЮТЕРЕ (кто хочет собирать сам) ===
 

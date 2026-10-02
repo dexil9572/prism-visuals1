@@ -40,16 +40,20 @@ jobs:
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.1-mc26.2
-          name: Prism Visuals 1.0.1 — Minecraft 26.2 (Fabric)
+          tag_name: v1.1.0-mc26.2
+          name: Prism Visuals 1.1.0 — Minecraft 26.2 (Fabric)
           body: |
             Клиентский визуальный мод **Prism Visuals** для **Minecraft 26.2 (Fabric)**.
 
             Что нужно: Fabric Loader `0.19.0+` для 26.2 (рекомендуется 0.19.3), Fabric API `0.161.0+26.2`, Java 25.
-            Кидай `prism-visuals-1.0.1.jar` и Fabric API в папку `mods`.
+            Кидай `prism-visuals-1.1.0.jar` и Fabric API в папку `mods`.
 
-            Управление: **Right Shift** — меню модулей, **C** (зажать) — зум, **G** — автоспринт.
-            Конфиг: `.minecraft/config/prism.json`
+            Управление: **Right Shift** — меню модулей, **C** (зажать) — зум, **G** — автоспринт,
+            **V** — скопировать координаты.
+
+            Что нового в 1.1.0: модули **No View Bobbing**, **Custom FOV**, **Clear Vision**,
+            **Particles**, **No Fog**, **Hide Hand**, **Item Info**, **Copy Coordinates**,
+            а также пинг в HUD, CPS на кейстроках и проценты прочности брони.
           overwrite_files: true
           files: build/libs/prism-visuals-*.jar
           make_latest: true

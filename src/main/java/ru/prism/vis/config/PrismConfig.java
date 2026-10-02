@@ -102,6 +102,31 @@ public class PrismConfig {
         // Time Changer
         public int timePreset = 0;
 
+        // Custom FOV
+        public int customFov = 90;
+
+        // Clear Vision
+        public boolean clearOverlays = true;
+        public boolean clearDarkness = true;
+        public boolean clearFovEffects = false;
+
+        // Particles
+        public int particleMode = 1;
+
+        // Item Info HUD
+        public boolean itemInfoName = true;
+        public boolean itemInfoDurability = true;
+        public boolean itemInfoCount = true;
+
+        // Copy Coordinates
+        public int copyFormat = 0;
+
+        // Keystrokes
+        public boolean keysCps = true;
+
+        // Armor HUD
+        public boolean armorPercent = false;
+
         void fillDefaults() {
             if (enabled == null) {
                 enabled = new HashMap<>();
@@ -119,6 +144,14 @@ public class PrismConfig {
             defaults.put("keystrokes", false);
             defaults.put("armor_hud", false);
             defaults.put("time_changer", false);
+            defaults.put("no_bob", false);
+            defaults.put("custom_fov", false);
+            defaults.put("clear_vision", false);
+            defaults.put("particles", false);
+            defaults.put("no_fog", false);
+            defaults.put("hide_hand", false);
+            defaults.put("item_info", false);
+            defaults.put("copy_pos", true);
             defaults.forEach(enabled::putIfAbsent);
         }
     }

@@ -4,6 +4,7 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -39,6 +40,9 @@ public final class HudRenderer {
         }
         if (ModuleManager.ARMOR_HUD.isEnabled()) {
             renderArmor(graphics, client);
+        }
+        if (ModuleManager.ITEM_INFO.isEnabled()) {
+            renderItemInfo(graphics, client);
         }
         if (ModuleManager.TOGGLE_SPRINT.isEnabled() && PrismConfig.get().sprintToggled) {
             graphics.centeredText(client.font, "Спринт [ВКЛ]",
@@ -100,7 +104,7 @@ public final class HudRenderer {
 
         String[] lines = {
                 "PRISM " + PrismClient.VERSION,
-                client.getFps() + " FPS",
+                client.getFps() + " FPS  ·  " + ping(client),
                 String.format("XYZ  %.1f  %.1f  %.1f", player.getX(), player.getY(), player.getZ()),
                 "F " + player.getDirection().getName() + "  ·  " + biome,
                 "CPS  " + PrismClient.attackCps() + " | " + PrismClient.useCps(),
@@ -127,6 +131,65 @@ public final class HudRenderer {
         }
     }
 
+    /** Пинг до сервера в миллисекундах (в одиночной игре — прочерк). */
+    private static String ping(Minecraft client) {
+        if (client.getConnection() == null || client.player == null) {
+            return "-- ms";
+        }
+        PlayerInfo info = client.getConnection().getPlayerInfo(client.player.getUUID());
+        return info == null ? "-- ms" : info.getLatency() + " ms";
+    }
+
+    // ============ Информация о предмете в руке ============
+
+    private static void renderItemInfo(GuiGraphicsExtractor graphics, Minecraft client) {
+        LocalPlayer player = client.player;
+        if (player == null) {
+            return;
+        }
+        ItemStack main = player.getMainHandItem();
+        if (main.isEmpty()) {
+            return;
+        }
+        Font font = client.font;
+        PrismConfig.Data cfg = PrismConfig.get();
+
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        if (cfg.itemInfoName) {
+            String name = main.getHoverName().getString();
+            lines.add(name);
+        }
+        if (cfg.itemInfoDurability && main.isDamageableItem() && main.getMaxDamage() > 0) {
+            int left = main.getMaxDamage() - main.getDamageValue();
+            int pct = Math.round(left * 100f / main.getMaxDamage());
+            lines.add(left + " / " + main.getMaxDamage() + "  (" + pct + "%)");
+        }
+        if (cfg.itemInfoCount && main.getCount() > 1) {
+            lines.add("x" + main.getCount());
+        }
+        if (lines.isEmpty()) {
+            return;
+        }
+
+        int w = 0;
+        for (String line : lines) {
+            w = Math.max(w, font.width(line));
+        }
+        int cx = graphics.guiWidth() / 2;
+        int bottom = graphics.guiHeight() - 62;
+        int top = bottom - lines.size() * 11 - 5;
+        int half = w / 2 + 5;
+
+        graphics.fill(cx - half, top, cx + half, bottom, 0x66070A12);
+        graphics.fill(cx - half, top, cx - half + 2, bottom, accent());
+
+        int y = top + 3;
+        for (String line : lines) {
+            graphics.centeredText(font, line, cx, y, 0xFFE2E8F0);
+            y += 11;
+        }
+    }
+
     // ============ Keystrokes ============
 
     private static void renderKeystrokes(GuiGraphicsExtractor graphics, Minecraft client) {
@@ -147,8 +210,10 @@ public final class HudRenderer {
 
         int my = y + (size + gap) * 2;
         int half = (totalW - gap) / 2;
-        key(graphics, font, "L", x, my, size, client.options.keyAttack.isDown(), accent, half);
-        key(graphics, font, "R", x + half + gap, my, size, client.options.keyUse.isDown(), accent, half);
+        String leftLabel = PrismConfig.get().keysCps ? "L " + PrismClient.attackCps() : "L";
+        String rightLabel = PrismConfig.get().keysCps ? "R " + PrismClient.useCps() : "R";
+        key(graphics, font, leftLabel, x, my, size, client.options.keyAttack.isDown(), accent, half);
+        key(graphics, font, rightLabel, x + half + gap, my, size, client.options.keyUse.isDown(), accent, half);
         key(graphics, font, "SPACE", x, my + size + gap, size, client.options.keyJump.isDown(), accent, totalW);
     }
 
@@ -201,6 +266,10 @@ public final class HudRenderer {
                 int barColor = 0xFF000000 | Colors.hsb(pct * 0.33f, 0.9f, 1f);
                 graphics.fill(sx + 2, y + 14, sx + 15, y + 16, 0xFF101018);
                 graphics.fill(sx + 2, y + 14, sx + 2 + Math.round(13 * pct), y + 16, barColor);
+                if (PrismConfig.get().armorPercent) {
+                    String text = Math.round(pct * 100f) + "%";
+                    graphics.text(client.font, text, sx + 17 - client.font.width(text), y - 9, 0xFFFFF59D, true);
+                }
             }
         }
     }

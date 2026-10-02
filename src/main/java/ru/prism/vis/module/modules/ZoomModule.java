@@ -5,6 +5,7 @@ import ru.prism.vis.PrismClient;
 import ru.prism.vis.config.PrismConfig;
 import ru.prism.vis.module.Category;
 import ru.prism.vis.module.Module;
+import ru.prism.vis.module.ModuleManager;
 
 /**
  * Плавный зум: сдвигаем FOV к цели с затуханием, пока зажата клавиша C.
@@ -34,7 +35,9 @@ public class ZoomModule extends Module {
                 && client.gui.screen() == null;
 
         if (want && baseFov == null) {
-            baseFov = client.options.fov().get();
+            baseFov = ModuleManager.CUSTOM_FOV.isEnabled()
+                    ? CustomFovModule.target()
+                    : client.options.fov().get();
         }
 
         float speed = PrismConfig.get().zoomSmoothCam ? 0.35f : 1.0f;

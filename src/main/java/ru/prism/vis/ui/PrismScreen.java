@@ -51,11 +51,12 @@ public class PrismScreen extends Screen {
             selected = 0;
         }
 
-        // сетка карточек 3 × N
-        int cols = 3;
-        int cardW = 188;
-        int cardH = 54;
+        // сетка карточек: колонки и высота подстраиваются под экран
         int gap = 8;
+        int cols = mods.size() > 12 ? 4 : 3;
+        int rows = (mods.size() + cols - 1) / cols;
+        int cardW = Math.min(188, (this.width - 32 - (cols - 1) * gap) / cols);
+        int cardH = Math.min(54, Math.max(34, (this.height - 156 - (rows - 1) * gap) / rows));
         int gridW = cols * cardW + (cols - 1) * gap;
         int startX = centerX - gridW / 2;
         int startY = 42;
@@ -67,7 +68,6 @@ public class PrismScreen extends Screen {
         }
 
         // панель настроек выбранного модуля
-        int rows = (mods.size() + cols - 1) / cols;
         int panelY = startY + rows * (cardH + gap) + 4;
         drawSettings(graphics, mods.get(selected), startX, panelY, gridW);
 
@@ -95,9 +95,12 @@ public class PrismScreen extends Screen {
         // цветная полоса категории
         graphics.fill(x, y, x + 2, y + h, 0xFF000000 | m.category.color);
 
-        graphics.text(font, m.name, x + 8, y + 7, on ? 0xFFFFFFFF : 0xFF94A3B8, true);
-        String desc = font.plainSubstrByWidth(m.description, w - 16);
-        graphics.text(font, desc, x + 8, y + 21, 0xFFA5B4C8, true);
+        boolean compact = h < 44;
+        graphics.text(font, m.name, x + 8, y + (compact ? 5 : 7), on ? 0xFFFFFFFF : 0xFF94A3B8, true);
+        if (!compact) {
+            String desc = font.plainSubstrByWidth(m.description, w - 16);
+            graphics.text(font, desc, x + 8, y + 21, 0xFFA5B4C8, true);
+        }
 
         // тумблер
         int tw = 26;
@@ -109,8 +112,8 @@ public class PrismScreen extends Screen {
         graphics.fill(knobX, ty + 2, knobX + 7, ty + th - 2, 0xFFFFFFFF);
 
         String state = on ? "ON" : "OFF";
-        graphics.text(font, state, x + 8, y + h - 15, on ? 0xFFA78BFA : 0xFF475569, true);
-        graphics.text(font, m.category.label, x + 30, y + h - 15, 0xFF000000 | m.category.color, true);
+        graphics.text(font, state, x + 8, y + h - 13, on ? 0xFFA78BFA : 0xFF475569, true);
+        graphics.text(font, m.category.label, x + 30, y + h - 13, 0xFF000000 | m.category.color, true);
 
         zones.add(new Zone(x, y, w, h, index, m::toggle));
     }

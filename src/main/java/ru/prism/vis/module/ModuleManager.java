@@ -2,8 +2,14 @@ package ru.prism.vis.module;
 
 import net.minecraft.client.Minecraft;
 import ru.prism.vis.config.PrismConfig;
+import ru.prism.vis.module.modules.ClearVisionModule;
+import ru.prism.vis.module.modules.CopyCoordsModule;
+import ru.prism.vis.module.modules.CustomFovModule;
 import ru.prism.vis.module.modules.FullBrightModule;
 import ru.prism.vis.module.modules.HitParticlesModule;
+import ru.prism.vis.module.modules.NoBobModule;
+import ru.prism.vis.module.modules.NoFogModule;
+import ru.prism.vis.module.modules.ParticlesModule;
 import ru.prism.vis.module.modules.TimeChangerModule;
 import ru.prism.vis.module.modules.ToggleSprintModule;
 import ru.prism.vis.module.modules.ZoomModule;
@@ -22,6 +28,12 @@ public final class ModuleManager {
     public static ZoomModule ZOOM;
     public static ToggleSprintModule TOGGLE_SPRINT;
     public static TimeChangerModule TIME_CHANGER;
+    public static NoBobModule NO_BOB;
+    public static CustomFovModule CUSTOM_FOV;
+    public static ClearVisionModule CLEAR_VISION;
+    public static ParticlesModule PARTICLES;
+    public static NoFogModule NO_FOG;
+    public static CopyCoordsModule COPY_POS;
 
     public static Module NO_HURT_CAM;
     public static Module LOW_FIRE;
@@ -30,6 +42,8 @@ public final class ModuleManager {
     public static Module ARMOR_HUD;
     public static Module CROSSHAIR;
     public static Module BLOCK_OVERLAY;
+    public static Module HIDE_HAND;
+    public static Module ITEM_INFO;
 
     public static void init() {
         HIT_PARTICLES = add(new HitParticlesModule());
@@ -37,6 +51,12 @@ public final class ModuleManager {
         ZOOM = add(new ZoomModule());
         TOGGLE_SPRINT = add(new ToggleSprintModule());
         TIME_CHANGER = add(new TimeChangerModule());
+        NO_BOB = add(new NoBobModule());
+        CUSTOM_FOV = add(new CustomFovModule());
+        CLEAR_VISION = add(new ClearVisionModule());
+        PARTICLES = add(new ParticlesModule());
+        NO_FOG = add(new NoFogModule());
+        COPY_POS = add(new CopyCoordsModule());
 
         NO_HURT_CAM = add(new Module(
                 "no_hurt_cam", "No Hurt Cam",
@@ -56,6 +76,9 @@ public final class ModuleManager {
             addBool("Радуга",
                     () -> PrismConfig.get().keysRainbow,
                     v -> PrismConfig.get().keysRainbow = v);
+            addBool("Показывать CPS",
+                    () -> PrismConfig.get().keysCps,
+                    v -> PrismConfig.get().keysCps = v);
         }});
 
         HUD_INFO = add(new Module(
@@ -68,7 +91,11 @@ public final class ModuleManager {
 
         ARMOR_HUD = add(new Module(
                 "armor_hud", "Armor HUD",
-                "Броня и прочность над хотбаром", Category.HUD));
+                "Броня и прочность над хотбаром", Category.HUD) {{
+            addBool("Проценты прочности",
+                    () -> PrismConfig.get().armorPercent,
+                    v -> PrismConfig.get().armorPercent = v);
+        }});
 
         CROSSHAIR = add(new Module(
                 "crosshair", "Crosshair",
@@ -85,6 +112,24 @@ public final class ModuleManager {
             addBool("Радуга",
                     () -> PrismConfig.get().crossRainbow,
                     v -> PrismConfig.get().crossRainbow = v);
+        }});
+
+        HIDE_HAND = add(new Module(
+                "hide_hand", "Hide Hand",
+                "Скрывает руки и предмет в первом лице", Category.RENDER));
+
+        ITEM_INFO = add(new Module(
+                "item_info", "Item Info",
+                "Название, прочность и количество предмета в руке", Category.HUD) {{
+            addBool("Название",
+                    () -> PrismConfig.get().itemInfoName,
+                    v -> PrismConfig.get().itemInfoName = v);
+            addBool("Прочность",
+                    () -> PrismConfig.get().itemInfoDurability,
+                    v -> PrismConfig.get().itemInfoDurability = v);
+            addBool("Количество",
+                    () -> PrismConfig.get().itemInfoCount,
+                    v -> PrismConfig.get().itemInfoCount = v);
         }});
 
         BLOCK_OVERLAY = add(new Module(
