@@ -45,39 +45,52 @@ jobs:
             net.minecraft.client.Minecraft \
             net.minecraft.client.Options \
             net.minecraft.client.KeyMapping \
+            'net.minecraft.client.KeyMapping$Category' \
+            net.minecraft.client.CameraType \
             net.minecraft.client.DeltaTracker \
+            net.minecraft.client.OptionInstance \
+            'net.minecraft.client.OptionInstance$ValueSet' \
+            'net.minecraft.client.OptionInstance$IntRange' \
+            'net.minecraft.client.OptionInstance$DoubleSliderCallbacks' \
             net.minecraft.client.gui.Gui \
             net.minecraft.client.gui.Hud \
             net.minecraft.client.gui.GuiGraphicsExtractor \
-            net.minecraft.client.gui.GuiGraphics \
             net.minecraft.client.gui.Font \
             net.minecraft.client.gui.screens.Screen \
+            net.minecraft.client.gui.components.events.GuiEventListener \
+            net.minecraft.client.gui.components.Renderable \
             net.minecraft.client.renderer.GameRenderer \
-            net.minecraft.client.renderer.InGameOverlayRenderer \
-            net.minecraft.client.renderer.LightTexture \
-            net.minecraft.client.OptionInstance \
+            net.minecraft.client.renderer.ScreenEffectRenderer \
+            net.minecraft.client.renderer.Lightmap \
+            net.minecraft.client.renderer.OrderedSubmitNodeCollector \
+            net.minecraft.client.renderer.rendertype.RenderType \
+            net.minecraft.client.renderer.rendertype.RenderTypes \
+            net.minecraft.client.renderer.state.level.BlockOutlineRenderState \
             net.minecraft.client.player.LocalPlayer \
-            net.minecraft.client.player.Input \
+            net.minecraft.client.player.ClientInput \
             net.minecraft.client.multiplayer.ClientLevel \
-            net.minecraft.core.particles.DustParticleOptions \
+            net.minecraft.world.entity.player.Player \
+            net.minecraft.world.entity.player.Inventory \
+            net.minecraft.world.entity.player.Input \
+            net.minecraft.world.entity.Entity \
             net.minecraft.world.item.ItemStack \
             net.minecraft.world.phys.AABB \
-            net.minecraft.world.phys.HitResult \
             net.minecraft.world.phys.BlockHitResult \
             net.minecraft.world.phys.EntityHitResult \
+            net.minecraft.world.phys.HitResult \
             net.minecraft.world.phys.Vec3 \
-            net.minecraft.client.renderer.rendertype.RenderTypes \
-            net.minecraft.client.renderer.MultiBufferSource \
-            net.minecraft.client.renderer.SubmitNodeCollector \
-            net.minecraft.client.renderer.state.level.BlockOutlineRenderState \
-            net.minecraft.client.renderer.state.level.LevelRenderState \
-            net.minecraft.client.renderer.state.level.CameraRenderState \
-            net.minecraft.util.ARGB \
-            net.minecraft.util.CommonColors \
+            net.minecraft.world.level.Level \
+            net.minecraft.world.level.storage.LevelData \
             net.minecraft.network.chat.Component \
             net.minecraft.resources.Identifier \
-            net.minecraft.world.entity.Entity \
-            net.minecraft.client.gui.components.ChatComponent ; do
+            net.minecraft.resources.ResourceKey \
+            net.minecraft.core.Holder \
+            net.minecraft.util.ARGB \
+            net.minecraft.util.Util \
+            com.mojang.blaze3d.vertex.PoseStack \
+            com.mojang.blaze3d.vertex.VertexConsumer \
+            com.mojang.blaze3d.platform.InputConstants \
+            'com.mojang.blaze3d.platform.InputConstants$Type' ; do
             echo "##### $c" >> api-dump/javap.txt
             javap -p -classpath "$MCJAR" "$c" >> api-dump/javap.txt 2>&1 || true
           done
