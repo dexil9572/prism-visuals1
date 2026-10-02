@@ -1,0 +1,78 @@
+name: API Dump
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/api-dump.yml'
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.7.1'
+
+      - name: Resolve dependencies
+        run: gradle --no-daemon build --continue || true
+
+      - name: Dump Minecraft + Fabric API signatures
+        run: |
+          set -eux
+          echo "===== JARS ====="
+          find ~/.gradle/caches/fabric-loom -name '*.jar' | head -50
+          MCJAR=$(for j in $(find ~/.gradle/caches/fabric-loom -name '*.jar'); do if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then echo "$j"; fi; done | head -1)
+          echo "MCJAR=$MCJAR"
+          echo "===== FILE LIST (selected packages) ====="
+          unzip -l "$MCJAR" | grep -E "net/minecraft/client/(gui|renderer)|net/minecraft/(world/phys|util/ARGB|core/particles|network/chat|resources)" | grep -v '\$' | awk '{print $4}' | head -400
+          echo "===== JAVAP ====="
+          for c in \
+            net.minecraft.client.Minecraft \
+            net.minecraft.client.Options \
+            net.minecraft.client.KeyMapping \
+            net.minecraft.client.DeltaTracker \
+            net.minecraft.client.gui.Gui \
+            net.minecraft.client.gui.Hud \
+            net.minecraft.client.gui.GuiGraphicsExtractor \
+            net.minecraft.client.gui.Font \
+            net.minecraft.client.gui.screens.Screen \
+            net.minecraft.client.renderer.GameRenderer \
+            net.minecraft.client.renderer.InGameOverlayRenderer \
+            net.minecraft.client.renderer.LightTexture \
+            net.minecraft.client.OptionInstance \
+            net.minecraft.client.player.LocalPlayer \
+            net.minecraft.client.multiplayer.ClientLevel \
+            net.minecraft.core.particles.DustParticleOptions \
+            net.minecraft.world.item.ItemStack \
+            net.minecraft.world.phys.AABB \
+            net.minecraft.world.phys.HitResult \
+            net.minecraft.world.phys.BlockHitResult \
+            net.minecraft.world.phys.EntityHitResult \
+            net.minecraft.world.phys.Vec3 \
+            net.minecraft.client.renderer.rendertype.RenderTypes \
+            net.minecraft.util.ARGB \
+            net.minecraft.network.chat.Component \
+            net.minecraft.resources.Identifier \
+            net.minecraft.world.entity.Entity \
+            net.minecraft.client.renderer.SubmitNodeCollector \
+            net.minecraft.client.renderer.state.level.BlockOutlineRenderState \
+            net.minecraft.client.renderer.state.level.LevelRenderState ; do
+            echo "##### $c"
+            javap -p -classpath "$MCJAR" "$c" 2>&1 | head -220 || true
+          done
+          echo "===== FABRIC API CLASSES ====="
+          for j in $(find ~/.gradle/caches/modules-2 -name 'fabric-rendering-v1*.jar' -o -name 'fabric-key-mapping-api-v1*.jar' -o -name 'fabric-lifecycle-events-v1*.jar' -o -name 'fabric-events-interaction-v0*.jar' | grep -v sources | head -10); do
+            echo "##### $j"
+            unzip -l "$j" | grep '\.class' | awk '{print $4}' | grep -E "api/" | head -100
+          done
