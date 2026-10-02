@@ -90,6 +90,20 @@ jobs:
             com.mojang.blaze3d.vertex.PoseStack \
             com.mojang.blaze3d.vertex.VertexConsumer \
             com.mojang.blaze3d.platform.InputConstants \
+            'net.minecraft.client.OptionInstance$UnitDouble' \
+            'net.minecraft.client.input.MouseButtonEvent' \
+            'net.minecraft.client.input.KeyEvent' \
+            net.minecraft.world.entity.LivingEntity \
+            net.minecraft.world.entity.EquipmentSlot \
+            'net.minecraft.util.Util$OS' \
+            net.minecraft.world.clock.ClockManager \
+            net.minecraft.client.ClientClockManager \
+            net.minecraft.world.clock.WorldClock \
+            net.minecraft.world.clock.WorldClocks \
+            net.minecraft.world.phys.Vec2 \
+            net.minecraft.client.renderer.state.level.SkyRenderState \
+            net.minecraft.client.gui.ActiveTextCollector \
+            net.minecraft.world.entity.EntityEquipment \
             'com.mojang.blaze3d.platform.InputConstants$Type' ; do
             echo "##### $c" >> api-dump/javap.txt
             javap -p -classpath "$MCJAR" "$c" >> api-dump/javap.txt 2>&1 || true

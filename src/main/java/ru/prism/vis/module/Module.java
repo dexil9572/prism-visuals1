@@ -1,6 +1,6 @@
 package ru.prism.vis.module;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import ru.prism.vis.config.PrismConfig;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class Module {
     }
 
     /** Вызывается каждый клиентский тик, даже если модуль выключен. */
-    public void onTick(MinecraftClient client) {
+    public void onTick(Minecraft client) {
     }
 
     // ============ Фабрики настроек для GUI ============

@@ -1,6 +1,6 @@
 package ru.prism.vis.module;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import ru.prism.vis.config.PrismConfig;
 import ru.prism.vis.module.modules.FullBrightModule;
 import ru.prism.vis.module.modules.HitParticlesModule;
@@ -111,7 +111,7 @@ public final class ModuleManager {
         return Collections.unmodifiableList(MODULES);
     }
 
-    public static void tick(MinecraftClient client) {
+    public static void tick(Minecraft client) {
         for (Module module : MODULES) {
             module.onTick(client);
         }
