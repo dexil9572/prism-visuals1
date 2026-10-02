@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/workflows/api-dump.yml'
 
+permissions:
+  contents: write
+
 jobs:
   dump:
     runs-on: ubuntu-latest
@@ -29,14 +32,15 @@ jobs:
 
       - name: Dump Minecraft + Fabric API signatures
         run: |
-          set -eux
-          echo "===== JARS ====="
-          find ~/.gradle/caches/fabric-loom -name '*.jar' | head -50
+          set -eu
+          mkdir -p api-dump
           MCJAR=$(for j in $(find ~/.gradle/caches/fabric-loom -name '*.jar'); do if unzip -l "$j" 2>/dev/null | grep -q 'net/minecraft/client/Minecraft.class'; then echo "$j"; fi; done | head -1)
-          echo "MCJAR=$MCJAR"
-          echo "===== FILE LIST (selected packages) ====="
-          unzip -l "$MCJAR" | grep -E "net/minecraft/client/(gui|renderer)|net/minecraft/(world/phys|util/ARGB|core/particles|network/chat|resources)" | grep -v '\$' | awk '{print $4}' | head -400
-          echo "===== JAVAP ====="
+          echo "MCJAR=$MCJAR" > api-dump/info.txt
+          find ~/.gradle/caches/fabric-loom -name '*.jar' >> api-dump/info.txt
+
+          unzip -l "$MCJAR" | awk '{print $4}' | grep '\.class$' | sed 's#/#.#g; s#\.class$##' | sort > api-dump/classes.txt
+
+          : > api-dump/javap.txt
           for c in \
             net.minecraft.client.Minecraft \
             net.minecraft.client.Options \
@@ -45,6 +49,7 @@ jobs:
             net.minecraft.client.gui.Gui \
             net.minecraft.client.gui.Hud \
             net.minecraft.client.gui.GuiGraphicsExtractor \
+            net.minecraft.client.gui.GuiGraphics \
             net.minecraft.client.gui.Font \
             net.minecraft.client.gui.screens.Screen \
             net.minecraft.client.renderer.GameRenderer \
@@ -52,6 +57,7 @@ jobs:
             net.minecraft.client.renderer.LightTexture \
             net.minecraft.client.OptionInstance \
             net.minecraft.client.player.LocalPlayer \
+            net.minecraft.client.player.Input \
             net.minecraft.client.multiplayer.ClientLevel \
             net.minecraft.core.particles.DustParticleOptions \
             net.minecraft.world.item.ItemStack \
@@ -61,18 +67,34 @@ jobs:
             net.minecraft.world.phys.EntityHitResult \
             net.minecraft.world.phys.Vec3 \
             net.minecraft.client.renderer.rendertype.RenderTypes \
+            net.minecraft.client.renderer.MultiBufferSource \
+            net.minecraft.client.renderer.SubmitNodeCollector \
+            net.minecraft.client.renderer.state.level.BlockOutlineRenderState \
+            net.minecraft.client.renderer.state.level.LevelRenderState \
+            net.minecraft.client.renderer.state.level.CameraRenderState \
             net.minecraft.util.ARGB \
+            net.minecraft.util.CommonColors \
             net.minecraft.network.chat.Component \
             net.minecraft.resources.Identifier \
             net.minecraft.world.entity.Entity \
-            net.minecraft.client.renderer.SubmitNodeCollector \
-            net.minecraft.client.renderer.state.level.BlockOutlineRenderState \
-            net.minecraft.client.renderer.state.level.LevelRenderState ; do
-            echo "##### $c"
-            javap -p -classpath "$MCJAR" "$c" 2>&1 | head -220 || true
+            net.minecraft.client.gui.components.ChatComponent ; do
+            echo "##### $c" >> api-dump/javap.txt
+            javap -p -classpath "$MCJAR" "$c" >> api-dump/javap.txt 2>&1 || true
           done
-          echo "===== FABRIC API CLASSES ====="
-          for j in $(find ~/.gradle/caches/modules-2 -name 'fabric-rendering-v1*.jar' -o -name 'fabric-key-mapping-api-v1*.jar' -o -name 'fabric-lifecycle-events-v1*.jar' -o -name 'fabric-events-interaction-v0*.jar' | grep -v sources | head -10); do
-            echo "##### $j"
-            unzip -l "$j" | grep '\.class' | awk '{print $4}' | grep -E "api/" | head -100
+
+          : > api-dump/fabric.txt
+          for j in $(find ~/.gradle/caches/modules-2 -name '*.jar' | grep -E 'fabric-(rendering-v1|key-mapping-api-v1|lifecycle-events-v1|events-interaction-v0|screen-api-v1)' | grep -v sources | sort -u); do
+            echo "##### $j" >> api-dump/fabric.txt
+            unzip -l "$j" | awk '{print $4}' | grep '\.class$' | grep -E 'api/' >> api-dump/fabric.txt || true
           done
+          wc -l api-dump/*.txt >> api-dump/info.txt
+
+      - name: Commit dump
+        run: |
+          set -eux
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f api-dump
+          git commit -m "chore: api dump [skip ci]"
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+          git push origin "HEAD:${GITHUB_REF_NAME}"

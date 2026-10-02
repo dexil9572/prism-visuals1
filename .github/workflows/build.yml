@@ -2,6 +2,8 @@ name: Build Prism Visuals
 
 on:
   push:
+    paths-ignore:
+      - 'api-dump/**'
   pull_request:
   workflow_dispatch:
 
