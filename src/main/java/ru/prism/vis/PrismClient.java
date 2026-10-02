@@ -30,7 +30,7 @@ import java.util.Deque;
  */
 public class PrismClient implements ClientModInitializer {
     public static final String MOD_ID = "prism";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.0.1";
 
     private static KeyMapping zoomKey;
     private static KeyMapping sprintKey;

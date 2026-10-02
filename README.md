@@ -12,7 +12,7 @@
 | Компонент | Версия |
 | --- | --- |
 | Minecraft | 26.2 |
-| Fabric Loader | 0.19.5 или новее |
+| Fabric Loader | **0.19.0 или новее** (рекомендуется 0.19.3+) |
 | Fabric API | 0.161.0+26.2 (или новее для 26.2) |
 | Java | 25 |
 
@@ -45,7 +45,7 @@
 
 ## Где взять готовый JAR
 
-1. **Releases** — готовый `prism-visuals-1.0.0.jar` прикреплён к последнему релизу
+1. **Releases** — готовый `prism-visuals-1.0.1.jar` прикреплён к последнему релизу
    (вкладка **Releases** справа на странице репозитория).
 2. Либо вкладка **Actions** -> последняя удачная сборка -> внизу **Artifacts** -> `prism-visuals-jar`.
 
@@ -53,7 +53,7 @@
 
 1. Установи **Fabric Loader** для 26.2: https://fabricmc.net/use/installer/
 2. Скачай **Fabric API** (Modrinth) и брось в `.minecraft/mods`
-3. Туда же — `prism-visuals-1.0.0.jar`
+3. Туда же — `prism-visuals-1.0.1.jar`
 4. Запускай игру, жми **Right Shift**
 
 ## Сборка из исходников
@@ -71,4 +71,4 @@ gradle wrapper --gradle-version 9.7.1
 gradlew build
 ```
 
-На Windows: `gradlew.bat build`. Готовый мод: `build/libs/prism-visuals-1.0.0.jar`.
+На Windows: `gradlew.bat build`. Готовый мод: `build/libs/prism-visuals-1.0.1.jar`.
