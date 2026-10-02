@@ -1,9 +1,9 @@
 package ru.prism.vis.module.modules;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.particle.DustParticleEffect;
-import org.joml.Vector3f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.entity.Entity;
 import ru.prism.vis.config.PrismConfig;
 import ru.prism.vis.module.Category;
 import ru.prism.vis.module.Module;
@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Цветной взрыв частиц при ударе по сущности.
- * Вызывается из MinecraftClientMixin (doAttack).
+ * Вызывается из PrismClient по событию атаки (ClientPreAttackCallback).
  */
 public class HitParticlesModule extends Module {
     public HitParticlesModule() {
@@ -29,8 +29,8 @@ public class HitParticlesModule extends Module {
                 v -> PrismConfig.get().particleRainbow = v);
     }
 
-    public static void spawn(MinecraftClient client, Entity target) {
-        if (client.particleManager == null) {
+    public static void spawn(Minecraft client, Entity target) {
+        if (client.level == null || target == null) {
             return;
         }
         PrismConfig.Data cfg = PrismConfig.get();
@@ -44,14 +44,13 @@ public class HitParticlesModule extends Module {
             } else {
                 rgb = Colors.palette(cfg.particleColor);
             }
-            float[] c = Colors.rgbf(rgb);
-            DustParticleEffect dust = new DustParticleEffect(new Vector3f(c[0], c[1], c[2]), 1.15f);
+            DustParticleOptions dust = new DustParticleOptions(ARGB.opaque(rgb), 1.15f);
 
             double x = target.getX() + rnd(-0.45, 0.45);
-            double y = target.getY() + target.getHeight() * 0.55 + rnd(-0.3, 0.3);
+            double y = target.getY() + target.getBbHeight() * 0.55 + rnd(-0.3, 0.3);
             double z = target.getZ() + rnd(-0.45, 0.45);
 
-            client.particleManager.addParticle(dust, x, y, z,
+            client.level.addParticle(dust, x, y, z,
                     rnd(-0.28, 0.28), rnd(0.06, 0.4), rnd(-0.28, 0.28));
         }
     }

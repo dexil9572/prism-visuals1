@@ -96,6 +96,17 @@ jobs:
             net.minecraft.world.entity.LivingEntity \
             net.minecraft.world.entity.EquipmentSlot \
             'net.minecraft.util.Util$OS' \
+            net.minecraft.client.renderer.SkyRenderer \
+            net.minecraft.world.phys.shapes.Shapes \
+            net.minecraft.world.phys.shapes.VoxelShape \
+            net.minecraft.core.Direction \
+            net.minecraft.world.level.LevelReader \
+            net.minecraft.world.level.biome.BiomeManager \
+            net.minecraft.client.particle.ParticleEngine \
+            'net.minecraft.client.input.MouseButtonInfo' \
+            net.minecraft.world.clock.ClockNetworkState \
+            'net.minecraft.client.ClientClockManager$ClockInstance' \
+            net.minecraft.world.clock.ServerClockManager \
             net.minecraft.world.clock.ClockManager \
             net.minecraft.client.ClientClockManager \
             net.minecraft.world.clock.WorldClock \

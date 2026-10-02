@@ -1,18 +1,16 @@
 package ru.prism.vis.module.modules;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import ru.prism.vis.PrismClient;
 import ru.prism.vis.config.PrismConfig;
 import ru.prism.vis.module.Category;
 import ru.prism.vis.module.Module;
 
 /**
- * Плавный зум: сдвигаем FOV к цели с затуханием,
- * опционально включаем кинематографичную камеру.
+ * Плавный зум: сдвигаем FOV к цели с затуханием, пока зажата клавиша C.
  */
 public class ZoomModule extends Module {
     private Integer baseFov;
-    private boolean baseSmooth;
     private float fade;
 
     public ZoomModule() {
@@ -20,40 +18,35 @@ public class ZoomModule extends Module {
         addRange("Сила %", 10, 90, 5,
                 () -> PrismConfig.get().zoomStrength,
                 v -> PrismConfig.get().zoomStrength = v);
-        addBool("Кино-камера",
+        addBool("Плавность",
                 () -> PrismConfig.get().zoomSmoothCam,
                 v -> PrismConfig.get().zoomSmoothCam = v);
     }
 
     @Override
-    public void onTick(MinecraftClient client) {
+    public void onTick(Minecraft client) {
         if (client.options == null) {
             return;
         }
         boolean want = isEnabled()
                 && PrismClient.zoomKey() != null
-                && PrismClient.zoomKey().isPressed()
-                && client.currentScreen == null;
+                && PrismClient.zoomKey().isDown()
+                && client.gui.screen() == null;
 
         if (want && baseFov == null) {
-            baseFov = client.options.getFov().getValue();
-            baseSmooth = client.options.smoothCameraEnabled;
+            baseFov = client.options.fov().get();
         }
 
-        fade += ((want ? 1f : 0f) - fade) * 0.35f;
+        float speed = PrismConfig.get().zoomSmoothCam ? 0.35f : 1.0f;
+        fade += ((want ? 1f : 0f) - fade) * speed;
 
         if (baseFov != null) {
             double strength = PrismConfig.get().zoomStrength / 100.0;
             int fov = (int) Math.round(baseFov * (1.0 - strength * fade));
-            client.options.getFov().setValue(Math.max(30, Math.min(110, fov)));
-
-            if (PrismConfig.get().zoomSmoothCam) {
-                client.options.smoothCameraEnabled = fade > 0.05f;
-            }
+            client.options.fov().set(Math.max(30, Math.min(110, fov)));
 
             if (!want && fade < 0.03f) {
-                client.options.getFov().setValue(baseFov);
-                client.options.smoothCameraEnabled = baseSmooth;
+                client.options.fov().set(baseFov);
                 baseFov = null;
                 fade = 0f;
             }
