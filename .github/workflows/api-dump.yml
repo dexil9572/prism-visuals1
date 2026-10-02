@@ -28,7 +28,7 @@ jobs:
           gradle-version: '9.7.1'
 
       - name: Resolve dependencies
-        run: gradle --no-daemon build --continue || true
+        run: gradle --no-daemon build --continue > build-out.txt 2>&1 || true
 
       - name: Dump Minecraft + Fabric API signatures
         run: |
@@ -51,7 +51,9 @@ jobs:
             net.minecraft.client.OptionInstance \
             'net.minecraft.client.OptionInstance$ValueSet' \
             'net.minecraft.client.OptionInstance$IntRange' \
-            'net.minecraft.client.OptionInstance$DoubleSliderCallbacks' \
+            'net.minecraft.client.OptionInstance$UnitDouble' \
+            'net.minecraft.client.input.MouseButtonEvent' \
+            'net.minecraft.client.input.KeyEvent' \
             net.minecraft.client.gui.Gui \
             net.minecraft.client.gui.Hud \
             net.minecraft.client.gui.GuiGraphicsExtractor \
@@ -59,62 +61,57 @@ jobs:
             net.minecraft.client.gui.screens.Screen \
             net.minecraft.client.gui.components.events.GuiEventListener \
             net.minecraft.client.gui.components.Renderable \
+            net.minecraft.client.gui.ActiveTextCollector \
             net.minecraft.client.renderer.GameRenderer \
             net.minecraft.client.renderer.ScreenEffectRenderer \
             net.minecraft.client.renderer.Lightmap \
             net.minecraft.client.renderer.OrderedSubmitNodeCollector \
+            net.minecraft.client.renderer.SkyRenderer \
+            net.minecraft.client.renderer.extract.LevelExtractor \
             net.minecraft.client.renderer.rendertype.RenderType \
             net.minecraft.client.renderer.rendertype.RenderTypes \
             net.minecraft.client.renderer.state.level.BlockOutlineRenderState \
+            net.minecraft.client.renderer.state.level.SkyRenderState \
             net.minecraft.client.player.LocalPlayer \
             net.minecraft.client.player.ClientInput \
             net.minecraft.client.multiplayer.ClientLevel \
+            net.minecraft.client.particle.ParticleEngine \
+            net.minecraft.client.ClientClockManager \
+            'net.minecraft.client.ClientClockManager$ClockInstance' \
             net.minecraft.world.entity.player.Player \
             net.minecraft.world.entity.player.Inventory \
             net.minecraft.world.entity.player.Input \
+            net.minecraft.world.entity.LivingEntity \
             net.minecraft.world.entity.Entity \
+            net.minecraft.world.entity.EquipmentSlot \
+            net.minecraft.world.entity.EntityEquipment \
             net.minecraft.world.item.ItemStack \
             net.minecraft.world.phys.AABB \
             net.minecraft.world.phys.BlockHitResult \
             net.minecraft.world.phys.EntityHitResult \
             net.minecraft.world.phys.HitResult \
+            net.minecraft.world.phys.Vec2 \
             net.minecraft.world.phys.Vec3 \
+            net.minecraft.world.phys.shapes.Shapes \
             net.minecraft.world.level.Level \
+            net.minecraft.world.level.LevelReader \
+            net.minecraft.world.level.biome.BiomeManager \
             net.minecraft.world.level.storage.LevelData \
+            net.minecraft.core.Direction \
+            net.minecraft.core.Holder \
             net.minecraft.network.chat.Component \
             net.minecraft.resources.Identifier \
             net.minecraft.resources.ResourceKey \
-            net.minecraft.core.Holder \
             net.minecraft.util.ARGB \
             net.minecraft.util.Util \
+            'net.minecraft.util.Util$OS' \
+            net.minecraft.world.clock.ClockManager \
+            net.minecraft.world.clock.WorldClock \
+            net.minecraft.world.clock.WorldClocks \
+            net.minecraft.world.clock.ClockNetworkState \
             com.mojang.blaze3d.vertex.PoseStack \
             com.mojang.blaze3d.vertex.VertexConsumer \
             com.mojang.blaze3d.platform.InputConstants \
-            'net.minecraft.client.OptionInstance$UnitDouble' \
-            'net.minecraft.client.input.MouseButtonEvent' \
-            'net.minecraft.client.input.KeyEvent' \
-            net.minecraft.world.entity.LivingEntity \
-            net.minecraft.world.entity.EquipmentSlot \
-            'net.minecraft.util.Util$OS' \
-            net.minecraft.client.renderer.SkyRenderer \
-            net.minecraft.world.phys.shapes.Shapes \
-            net.minecraft.world.phys.shapes.VoxelShape \
-            net.minecraft.core.Direction \
-            net.minecraft.world.level.LevelReader \
-            net.minecraft.world.level.biome.BiomeManager \
-            net.minecraft.client.particle.ParticleEngine \
-            'net.minecraft.client.input.MouseButtonInfo' \
-            net.minecraft.world.clock.ClockNetworkState \
-            'net.minecraft.client.ClientClockManager$ClockInstance' \
-            net.minecraft.world.clock.ServerClockManager \
-            net.minecraft.world.clock.ClockManager \
-            net.minecraft.client.ClientClockManager \
-            net.minecraft.world.clock.WorldClock \
-            net.minecraft.world.clock.WorldClocks \
-            net.minecraft.world.phys.Vec2 \
-            net.minecraft.client.renderer.state.level.SkyRenderState \
-            net.minecraft.client.gui.ActiveTextCollector \
-            net.minecraft.world.entity.EntityEquipment \
             'com.mojang.blaze3d.platform.InputConstants$Type' ; do
             echo "##### $c" >> api-dump/javap.txt
             javap -p -classpath "$MCJAR" "$c" >> api-dump/javap.txt 2>&1 || true
@@ -125,6 +122,19 @@ jobs:
             echo "##### $j" >> api-dump/fabric.txt
             unzip -l "$j" | awk '{print $4}' | grep '\.class$' | grep -E 'api/' >> api-dump/fabric.txt || true
           done
+
+          : > api-dump/jar.txt
+          echo "=== build/libs ===" >> api-dump/jar.txt
+          ls -la build/libs >> api-dump/jar.txt 2>&1 || true
+          for j in build/libs/*.jar; do
+            echo "##### $j" >> api-dump/jar.txt
+            unzip -l "$j" | head -60 >> api-dump/jar.txt
+            echo "##### refmap" >> api-dump/jar.txt
+            unzip -p "$j" prism-visuals-refmap.json >> api-dump/jar.txt 2>&1 || true
+            echo "##### fabric.mod.json" >> api-dump/jar.txt
+            unzip -p "$j" fabric.mod.json >> api-dump/jar.txt 2>&1 || true
+          done
+          tail -c 4000 build-out.txt > api-dump/gradle-tail.txt
           wc -l api-dump/*.txt >> api-dump/info.txt
 
       - name: Commit dump
