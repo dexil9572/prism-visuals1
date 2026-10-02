@@ -13,7 +13,16 @@ import ru.prism.vis.module.modules.TimeChangerModule;
 public abstract class LevelClockMixin {
 
     @Inject(method = "getOverworldClockTime", at = @At("HEAD"), cancellable = true)
-    private void prism$timeChanger(CallbackInfoReturnable<Long> cir) {
+    private void prism$timeChangerOverworld(CallbackInfoReturnable<Long> cir) {
+        prism$applyTimeChanger(cir);
+    }
+
+    @Inject(method = "getDefaultClockTime", at = @At("HEAD"), cancellable = true)
+    private void prism$timeChangerDefault(CallbackInfoReturnable<Long> cir) {
+        prism$applyTimeChanger(cir);
+    }
+
+    private static void prism$applyTimeChanger(CallbackInfoReturnable<Long> cir) {
         if (ModuleManager.TIME_CHANGER != null && ModuleManager.TIME_CHANGER.isEnabled()) {
             cir.setReturnValue(TimeChangerModule.targetTime());
         }

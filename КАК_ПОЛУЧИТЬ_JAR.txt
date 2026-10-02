@@ -1,27 +1,35 @@
-В этом архиве — полный исходный код мода Prism Visuals.
+В этом архиве — полный исходный код мода Prism Visuals для Minecraft 26.2 (Fabric).
 
-=== САМЫЙ ПРОСТОЙ СПОСОБ — В БРАУЗЕРЕ, НИЧЕГО НЕ УСТАНАВЛИВАЯ ===
+=== САМЫЙ ПРОСТОЙ СПОСОБ — ГОТОВЫЙ JAR ===
 
-1. Зайди на https://github.com  (бесплатный аккаунт).
-2. Создай новый репозиторий:  https://github.com/new
-   (имя любое, например prism-visuals).
-3. На странице репозитория нажми 'uploading an existing file'
-   и перетащи ВСЕ файлы и папки из этого архива, включая
-   скрытую папку .github  (на Mac видна по Cmd+Shift+точка).
-   Внизу страницы нажми 'Commit changes'.
-4. Вкладка Actions  ->  если спросит, разреши workflows ->
-   слева 'Build Prism Visuals'  ->  кнопка 'Run workflow'.
-5. Подожди 3-6 минут, обнови страницу, открой завершившуюся
-   сборку и внизу в блоке Artifacts скачай prism-visuals-jar.zip
-   внутри него готовый prism-visuals-1.0.0.jar.
+1. Открой страницу репозитория на GitHub.
+2. Справа выбери вкладку "Releases" и скачай prism-visuals-1.0.0.jar
+   из последнего релиза "Prism Visuals 1.0.0 — Minecraft 26.2 (Fabric)".
+   (Если релиза ещё нет — вкладка Actions -> последняя удачная сборка
+   "Build Prism Visuals" -> внизу блок Artifacts -> prism-visuals-jar.)
+3. Этот jar — уже собранный мод, больше ничего собирать не надо.
 
-GitHub сам скачает Java, Gradle и Minecraft — на твоём
-компьютере не нужно ставить НИЧЕГО.
+=== ПЕРЕД ИГРОЙ ПОСТАВЬ ===
+
+- Minecraft 26.2 + Fabric Loader (https://fabricmc.net/use/installer/)
+- Fabric API для 26.2 (https://modrinth.com/mod/fabric-api) — тоже в папку mods
+- Java 25 (нужна самой игре 26.x)
+
+Скачанный prism-visuals-1.0.0.jar положи в папку .minecraft/mods рядом с Fabric API.
 
 === СПОСОБ НА СВОЁМ КОМПЬЮТЕРЕ (кто хочет собирать сам) ===
 
-Понадобится JDK 21: https://adoptium.net/temurin/releases/?version=21
+Понадобится JDK 25: https://adoptium.net/temurin/releases/?version=25
+и Gradle 9.7.1: https://gradle.org/install/
 Потом в папке проекта:
-  gradle wrapper --gradle-version 8.10
-  gradlew build
-Готовый JAR появится в папке build/libs/
+
+  gradle wrapper --gradle-version 9.7.1
+  gradlew build          (на Windows: gradlew.bat build)
+
+Готовый JAR появится в папке build/libs/.
+
+=== ЕСЛИ СОБИРАЕШЬ В ОБЛАКЕ (GitHub Actions) ===
+
+1. Залей все файлы проекта (включая скрытую папку .github) в свой репозиторий.
+2. Вкладка Actions -> "Build Prism Visuals" -> Run workflow.
+3. Через 3-6 минут готовый jar будет в Artifacts и в Releases.

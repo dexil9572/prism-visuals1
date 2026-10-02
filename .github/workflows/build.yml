@@ -2,8 +2,6 @@ name: Build Prism Visuals
 
 on:
   push:
-    paths-ignore:
-      - 'api-dump/**'
   pull_request:
   workflow_dispatch:
 
@@ -29,28 +27,28 @@ jobs:
           gradle-version: '9.7.1'
 
       - name: Build
-        run: |
-          set +e
-          gradle --no-daemon --stacktrace --console=plain build > build-log.txt 2>&1
-          echo "GRADLE_EXIT=$?" >> build-log.txt
-          tail -c 200000 build-log.txt
-          grep -q "GRADLE_EXIT=0" build-log.txt
-
-      - name: Commit build log (failed builds only)
-        if: failure()
-        run: |
-          set -x
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f build-log.txt
-          git commit -m "chore: build log [skip ci]"
-          git pull --rebase origin "${GITHUB_REF_NAME}" || true
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+        run: gradle --no-daemon build
 
       - name: Upload jar
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: prism-visuals-jar
-          path: build/libs/*.jar
+          path: build/libs/prism-visuals-*.jar
           if-no-files-found: error
+
+      - name: Publish release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-mc26.2
+          name: Prism Visuals 1.0.0 — Minecraft 26.2 (Fabric)
+          body: |
+            Клиентский визуальный мод **Prism Visuals** для **Minecraft 26.2 (Fabric)**.
+
+            Что нужно: Fabric Loader для 26.2, Fabric API `0.161.0+26.2`, Java 25.
+            Кидай `prism-visuals-1.0.0.jar` и Fabric API в папку `mods`.
+
+            Управление: **Right Shift** — меню модулей, **C** (зажать) — зум, **G** — автоспринт.
+            Конфиг: `.minecraft/config/prism.json`
+          files: build/libs/prism-visuals-*.jar
+          make_latest: true
